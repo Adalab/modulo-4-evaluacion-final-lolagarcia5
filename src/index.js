@@ -10,8 +10,6 @@ const cors = require("cors");
 const mysql = require("mysql2/promise");
 require('dotenv').config()
 
-
-
 // Arracar el servidor
 
 const server = express();
@@ -20,19 +18,16 @@ const server = express();
 
 server.use(cors());
 server.use(express.json({limit: "25mb"}));
-server.set('view engine', 'ejs');
-
-
 
 // Conexion a la base de datos
 
 async function getConnection() {
   const connection = await mysql.createConnection(
     {
-      host: process.env.DB_HOST || "localhost",
-      user: process.env.DB_USER || "root",
+      host: process.env.DB_HOST || "sql.freedb.tech",
+      user: process.env.DB_USER || "freedb_lola garcia",
       password: process.env.DB_PASS,  // <-- Pon aquí tu contraseña o en el fichero /.env en la carpeta raíz
-      database: process.env.DB_NAME || "Clase",
+      database: process.env.DB_NAME || "freedb_evaluación",
     }
   );
 
@@ -41,11 +36,9 @@ async function getConnection() {
   return connection;
 }
 
-
-
 // Poner a escuchar el servidor
 
-const port = process.env.PORT || 4500;
+const port = process.env.PORT || 3306;
 server.listen(port, () => {
   console.log(`Ya se ha arrancado nuestro servidor: http://localhost:${port}/`);
 });
@@ -56,31 +49,90 @@ server.listen(port, () => {
 
 // GET /api/items
 
-server.get("/api/items", async (req, res) => {
+server.get('GET/recetas/:id', async (req, res) => {
 
-  const selectProducts = "SELECT * FROM products";
-
+  const user = req.params.id;
+  const select = 'select * from recetas where id = ?';
   const conn = await getConnection();
-
-  const [results] = await conn.query(selectProducts);
-
-  console.log(results);
-
+  const [result] = await conn.query (select,user);
   conn.end();
-
-  res.json(results);
+  res.jason ({
+      "info": { "count": result.length}, // número de elementos  
+      "results": result, // listado 
+  })
 });
 
+// nueva receta
+server.post('POST/recetas', async (req,res)=>{
+const user = req.params.user;
+const nuevareceta = req.body;
 
-
-// GET /details
-
-server.get("/details", async (req, res) => {
-
-  res.render('details', {})
+try{
+const insert = "insert into recetas (`nombre`,`ingredientes`,`instrucciones`)values(?,?,?)";
+const conn = await getConnection();
+const [result] = await conn.query (insert, [
+  user,
+  recetas.nombre,
+  recetas.ingrediente,
+  recetas.instrucciones,
+])
+conn.end();
+res.json({
+  sucess: true,
+  id: nuevo_id,
+});
+}catch (error){
+  res.json({
+    sucess: false,
+    message: "texto mínimamente descriptivo del error",
+  });
+}
 });
 
+// Actualizar receta
 
-// Serv estáticos
+server.put('PUT/recetas', async (req,res)) => {
+  const user = req.params.user,
+  const recetasid = req.params.recetas_id,
+  const {nombre, ingredientes, instrucciones} = req.body;
 
-server.use(express.static("./src/public_html"));
+  try{
+    const update = 'UPDATE recectas SET nombre = ?, ingredientes = ?, instrucciones =? WHERE id = ?';
+    const conn = await getConnection();
+    const [result] = await conn.query (update, [
+      nombre,ingredientes, instrucciones,recetasid
+    ])
+    conn.end()
+    res.json({
+      sucess: true,});
+
+
+  }catch (error){
+    res.json({
+      sucess: false,
+      message: "texto mínimamente descriptivo del error",
+  });
+}};
+
+//eliminar una receta
+server.put('DELETE/recetas/:id', async (req,res))=>
+const {user, recetas_id}  = req.params;
+
+try{
+  const deletesql = delete from recetas where id=?;
+  const conn = await getConnection();
+  const [result] = await conn.query (deltesql, [recetas_id, user]);
+  conn.end();
+  res.json({
+    sucess: false,
+    message: "texto mínimamente descriptivo del error",
+  });
+
+
+
+}catch (error){
+  res.json({
+    sucess: false,
+    message: "texto mínimamente descriptivo del error",
+})};
+
